@@ -6,6 +6,36 @@
 
 Explore original token-level traces, question and domain averages, expert-weight filters, recorded timings, and train-only hotlist coverage. Questions and answers have English reading translations alongside the original text. The token view always shows the original stream used in the experiment.
 
+## Download all the data
+
+**All data displayed in Router Lab are publicly downloadable, including the complete routing trace for every recorded token.** Download both archives below for the full collection:
+
+| Download | Size | Contents |
+|---|---:|---|
+| **[All token-level routing traces — ZIP](https://github.com/IvanPanzera/fnmr-qwen3.8-flash-next/releases/download/source-bundle-v1/fnmr-traces-v1.zip)** | **1.75 GB** | 3,600 lossless trace files: prefill and generation for all 1,800 questions; 868,657 tokens, with selected expert IDs and effective weights at every layer. |
+| **[Texts, metrics, derived data and viewer — ZIP](https://github.com/IvanPanzera/fnmr-qwen3.8-flash-next/releases/download/source-bundle-v1/fnmr-site-v1.zip)** | **33.9 MB** | Original questions and answers, English reading editions, token IDs and text, timings, experiment configuration, domain matrices, filter curves, hotlist rankings/profiles, provenance hashes and the viewer source. |
+
+Sizes are decimal. These are the published `source-bundle-v1` release assets. Extract both ZIPs into the same folder to obtain the complete `docs/` and `data/traces/` layout. You can also [browse the immutable dataset](https://github.com/IvanPanzera/fnmr-qwen3.8-flash-next/tree/dataset-v1) or clone this repository.
+
+### Choose the format you need
+
+- **One table for a token, question mean or domain mean:** select it in [Router Lab](https://ivanpanzera.github.io/fnmr-qwen3.8-flash-next/) and click **Export matrix CSV**. The CSV contains all 24,576 layer/expert weights (48 × 512), including zeros and values hidden by the display filter. It opens in Excel and other spreadsheet tools.
+- **All original token traces:** use `data/traces/<question-id>/prefill.fnr.gz` and `generation.fnr.gz`. These are the same compact, lossless FNR1 packets loaded by the viewer. Each token stores 48 × 10 selected expert IDs (`uint16`) and weights (`float32`); the remaining experts have zero effective weight. The [format specification](https://ivanpanzera.github.io/fnmr-qwen3.8-flash-next/methodology.html) and [JavaScript decoder](docs/data.js) describe how to reconstruct the full 48 × 512 table for every token.
+- **Text, token labels and measurements:** `docs/data/questions/<question-id>.json` contains the original and English text, `input_ids` / `input_tokens`, `output_ids` / `output_token_text`, `token_seconds`, phase durations, throughput and trace checksums. Token positions follow array order; the interface numbers them from one. Layer and expert IDs start at zero.
+- **Precomputed results:** `docs/data/matrices/` holds domain means, `docs/data/curves/` holds exact filter curves, and `docs/data/hotlists/` holds rankings and profiles. Compressed JSON files can be opened with any gzip reader. Question means are computed from the complete token traces; the [reference calculations](docs/math.js) are included.
+
+The compact files preserve the recorded numeric values while avoiding a separate, mostly zero-filled table for every token. SHA-256 hashes for individual traces are included in the question JSON files and provenance metadata.
+
+<details>
+<summary>Archive SHA-256 checksums</summary>
+
+```text
+fnmr-traces-v1.zip  148230868030b609b3de05a0ca7a8d63ade910eecaf47a5a939e5a94147d7547
+fnmr-site-v1.zip    01fd9f6971059ccda835a78c43768138bee5304e18f7c9eb50a609fae800143a
+```
+
+</details>
+
 ### The collection
 
 | Property | Value |
