@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Please cite this repository and the dataset-v1 tag when using the collection."
+title: "fnMR Qwen3.8-Flash-Next: functional neural MoE routing"
+type: dataset
+authors:
+  - family-names: Panzera
+    given-names: Ivan
+date-released: 2026-10-16
+url: "https://github.com/IvanPanzera/fnmr-qwen3.8-flash-next"
+version: dataset-v1

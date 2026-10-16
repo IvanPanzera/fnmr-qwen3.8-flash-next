@@ -1,0 +1,2 @@
+{"name":"fnmr-qwen3.8-flash-next","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.js","serve":"python -m http.server 8769 --bind 127.0.0.1"}}
+

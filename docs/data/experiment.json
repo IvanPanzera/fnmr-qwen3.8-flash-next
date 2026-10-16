@@ -1,0 +1,50 @@
+{
+  "config": {
+    "version": "2.1",
+    "context": 2048,
+    "prefill": 2048,
+    "resident_experts": 1504,
+    "speculative_window": 4,
+    "minimum_draft_probability": 0.5,
+    "omission": 0,
+    "kv": "int8",
+    "pool_workers": 13,
+    "pcie_fraction": 0.34,
+    "vram_reserve_mib": 1024
+  },
+  "model_label": "Qwen3.8-Flash-Next GSQ-RCO IQ3_S (ISTA-DASLab)",
+  "configuration_source": "Frozen campaign protocol",
+  "diagnostic_binary_sha256": "97817d9e73c9042acc6d62af3d833ca28d33614096759211f5c272b7f17a56c4",
+  "runtime_sha256": "1deb422075e79e306ec794f4b446759d457bff1781adca0c22ce74852b91c2c0",
+  "global_profile_sha256": "6557a60f557b8c79244643306c5023af69e536ed94b6772890419c6633f39f20",
+  "max_new_tokens": 384,
+  "measured_lengths": {
+    "input_tokens": {
+      "min": 74,
+      "max": 1506,
+      "mean": 288.2688888888889,
+      "total": 518884
+    },
+    "output_tokens": {
+      "min": 7,
+      "max": 384,
+      "mean": 194.31833333333333,
+      "total": 349773
+    },
+    "prompt_characters": {
+      "min": 255,
+      "max": 4738,
+      "mean": 831.5438888888889,
+      "total": 1496779
+    }
+  },
+  "instrumentation_included_in_timing": true,
+  "holdout_family_indices": [
+    4,
+    9,
+    14,
+    19
+  ],
+  "collection_completed": "2026-10-08T22:18:44.872413Z",
+  "traces": "Effective normalized selected-expert weights; top10, 48 layers, 512 experts"
+}
