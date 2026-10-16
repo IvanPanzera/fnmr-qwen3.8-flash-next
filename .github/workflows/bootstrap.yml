@@ -1,0 +1,100 @@
+name: Import Router Lab source bundle
+on:
+  workflow_dispatch:
+    inputs:
+      site_sha256:
+        description: SHA-256 of fnmr-site-v1.zip (initial import only; leave empty to redeploy)
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths: ['.github/workflows/bootstrap.yml']
+permissions:
+  contents: read
+concurrency:
+  group: fnmr-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Import verified source bundle
+        id: import_bundle
+        if: inputs.site_sha256 != '' || hashFiles('docs/data/catalog.json') == ''
+        env:
+          SITE_SHA256: ${{ inputs.site_sha256 || '01fd9f6971059ccda835a78c43768138bee5304e18f7c9eb50a609fae800143a' }}
+        run: |
+          python - <<'PY'
+          import os,re,hashlib,urllib.request,zipfile,stat,pathlib,subprocess
+          root=pathlib.Path.cwd()
+          site_sha=os.environ['SITE_SHA256']
+          assert re.fullmatch('[0-9a-f]{64}',site_sha), 'Expected a SHA-256'
+          assert not subprocess.run(['git','ls-remote','--exit-code','--tags','origin','refs/tags/dataset-v1'],capture_output=True).returncode==0, 'dataset-v1 already exists; redeploy without an import'
+          bundles=[('fnmr-traces-v1.zip','148230868030b609b3de05a0ca7a8d63ade910eecaf47a5a939e5a94147d7547'),('fnmr-site-v1.zip',site_sha)]
+          for name,expected in bundles:
+              target=pathlib.Path(os.environ['RUNNER_TEMP'])/name
+              url='https://github.com/IvanPanzera/fnmr-qwen3.8-flash-next/releases/download/source-bundle-v1/'+name
+              subprocess.run(['curl','--fail','--location','--retry','2','--max-time','1200','--output',str(target),url],check=True)
+              h=hashlib.sha256()
+              with target.open('rb') as f:
+                  for block in iter(lambda:f.read(8*1024*1024),b''):h.update(block)
+              assert h.hexdigest()==expected, name+' checksum mismatch'
+              with zipfile.ZipFile(target) as z:
+                  for item in z.infolist():
+                      p=pathlib.PurePosixPath(item.filename)
+                      assert not p.is_absolute() and '..' not in p.parts and '\\' not in item.filename
+                      assert not stat.S_ISLNK(item.external_attr>>16)
+                      allowed=p.parts[0] in {'docs','data','tools','tests','README.md','LICENSE','CITATION.cff','package.json','.gitignore'}
+                      assert allowed, 'Unexpected path: '+str(p)
+                  z.extractall(root)
+          print('Both source bundles verified and extracted.')
+          PY
+      - name: Verify complete publication
+        run: |
+          python tools/verify_publication.py
+          node --test tests/core.test.js
+      - name: Commit verified dataset in bounded batches
+        if: steps.import_bundle.outcome == 'success'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          python - <<'PY'
+          import pathlib,subprocess
+          def git(*args):subprocess.run(['git',*args],check=True)
+          git('add','--','docs','tools','tests','README.md','LICENSE','CITATION.cff','package.json','.gitignore')
+          git('commit','-m','Publish Router Lab viewer, English reading editions and verified metadata')
+          git('push','origin','HEAD:main')
+          domains=sorted({p.name.rsplit('-',1)[0] for p in pathlib.Path('data/traces').iterdir()})
+          for domain in domains:
+              paths=sorted(str(p) for p in pathlib.Path('data/traces').glob(domain+'-*'))
+              git('add','--',*paths)
+              git('commit','-m','Add lossless original traces: '+domain)
+              git('push','origin','HEAD:main')
+          git('tag','-a','dataset-v1','-m','Verified 1,800-question original routing collection and English reading editions')
+          git('push','origin','refs/tags/dataset-v1')
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Router Lab
+        id: deployment
+        uses: actions/deploy-pages@v4
+
